@@ -83,6 +83,8 @@ correlations <- raw_data %>%
   mutate(region_as_number = as.numeric(as.factor(region))) %>% 
   mutate(smoker_as_number = as.numeric(as.factor(smoker))) %>% 
   select(age, bmi, children,  sex_as_number, region_as_number, smoker_as_number, charges) %>% cor()
+
+correlations
 ```
 
 Age, BMI, smoking, and charges are all somewhat positively correlated. Other than that, everything is pretty loosely spread throughout. This makes sense intuitively, as being old, having a high BMI, and smoking are all risk factors for potentially expensive medical problems. However, the correlation between the risk factors could lead to some false positive when building predictive models.
@@ -165,9 +167,13 @@ getCorrelations <- function(df){
 Acor <- getCorrelations(A)
 BCor <- getCorrelations(B)
 CCor <- getCorrelations(C)
-
+Acor
+BCor
+CCor
 
 ```
+
+In each of these clusters (or rather partitions), the correlation between age and charges is much higher, which shows how age is correlated with charges within a certain range, but is not correlated with what range that correlation is in. Something similar happens with BMI, with it being correlated with higher charges, but only in the highest partition. In contrast, smoking becomes much less correlated when the data is separated in this way.
 
 ```{r}
 A %>% select(age, charges) %>% plot()
@@ -206,7 +212,9 @@ hist(A$age, main = "Distrubution of age", xlab = "age", ylab = "frequency", col 
 summary(A)
 ```
 
-This main difference between Cluster A and the data-set at large seems to be the prevalence of smokers. A consists almost entirely of non-smokers. In fact, cluster A contains 91% of all non-smokers. \### Cluster B
+This main difference between Cluster A and the data-set at large seems to be the prevalence of smokers. A consists almost entirely of non-smokers. In fact, cluster A contains 91% of all non-smokers. 
+
+### Cluster B
 
 ```{r}
 summary(B)
@@ -264,154 +272,7 @@ A %>% select(bmi, charges) %>% plot()
 B %>% select(bmi, charges) %>% plot()
 ```
 
-Let's try a more sophisticated method of clustering: \## K-Means Clustering
 
-```{r}
-kmeans_clusters <- raw_data %>% 
-  mutate(sex_as_factor = as.numeric(as.factor(sex))) %>% 
-  mutate(smoker_as_factor = as.numeric(as.factor(smoker))) %>% 
-  select(age, bmi, sex_as_factor, smoker_as_factor, children, charges) %>% 
-  scale(center = FALSE, scale = TRUE ) %>% 
-  kmeans(centers = 3, iter.max = 200, nstart = 6 )
-
-
-
-```
-
-Now we can compare these clusters to the partitions described above.
-
-```{r}
-data_with_cluster_labels <- raw_data
-data_with_cluster_labels$cluster <- kmeans_clusters$cluster
-```
-
-```{r}
-data_with_cluster_labels %>% 
-  group_by(cluster) %>% 
-summary()
-```
-
-```{r}
-data_with_cluster_labels %>% 
-  group_by(cluster) %>% 
-  select(sex) %>%
-  table()
-```
-
-```{r}
-  data_with_cluster_labels %>% 
-  group_by(cluster) %>% 
-  select(smoker) %>% 
-  table()
-```
-
-Cluster 3 looks the most like partition A above, being the largest and containing almost exclusively non-smokers. Unlike the partitions above, however, every category here hasa a strong majority of either smokers or non-smokers. The clusters mostly have a pretty even sex ratio, with cluster 2 being more male.
-
-```{r}
-cluster1 <- data_with_cluster_labels %>% 
-  filter(cluster == 1)
-cluster2 = data_with_cluster_labels %>% 
-  filter(cluster == 2)
-cluster3 = data_with_cluster_labels %>% 
-  filter(cluster == 3)
-```
-
-```{r}
-hist(cluster1$charges,
-     main="Distribution of charges in cluster 1",
-     xlab = "charges",
-     ylab = "frequency",
-     col="lightblue",
-     breaks = 50)
-
-hist(cluster2$charges,
-     main="Distribution of charges in cluster 2",
-     xlab = "charges",
-     ylab = "frequency",
-     col="lightblue",
-     breaks = 50)
-
-hist(cluster3$charges,
-     main="Distribution of charges in cluster 3",
-     xlab = "charges",
-     ylab = "frequency",
-     col="lightblue",
-     breaks = 50)
-
-
-```
-
-```{r}
-hist(cluster1$age,
-     main="Distribution of ages in cluster 1",
-     xlab = "charges",
-     ylab = "frequency",
-     col="lightblue",
-     breaks = 50)
-
-hist(cluster2$age,
-     main="Distribution of ages in cluster 2",
-     xlab = "charges",
-     ylab = "frequency",
-     col="lightblue",
-     breaks = 50)
-
-hist(cluster3$age,
-     main="Distribution of ages in cluster 3",
-     xlab = "charges",
-     ylab = "frequency",
-     col="lightblue",
-     breaks = 50)
-
-summary(cluster1$age)
-summary(cluster2$age)
-summary(cluster3$age)
-
-
-```
-
-```{r}
-hist(cluster1$bmi,
-     main="Distribution of bmi in cluster 1",
-     xlab = "charges",
-     ylab = "frequency",
-     col="lightblue",
-     breaks = 50)
-
-hist(cluster2$bmi,
-     main="Distribution of bmi in cluster 2",
-     xlab = "charges",
-     ylab = "frequency",
-     col="lightblue",
-     breaks = 50)
-
-hist(cluster3$bmi,
-     main="Distribution of bmi in cluster 3",
-     xlab = "charges",
-     ylab = "frequency",
-     col="lightblue",
-     breaks = 50)
-
-summary(cluster1$bmi)
-summary(cluster2$bmi)
-summary(cluster3$bmi)
-
-cluster1Correlations <- cluster1 %>% 
-  mutate(sex_as_number = as.numeric(as.factor(sex))) %>% 
-  mutate(smoker_as_number = as.numeric(as.factor(smoker))) %>% 
-  select(age, bmi, sex_as_number, smoker_as_number, charges) %>% cor()
-
-cluster2Correlations <- cluster2 %>% 
-  mutate(sex_as_number = as.numeric(as.factor(sex))) %>% 
-  mutate(smoker_as_number = as.numeric(as.factor(smoker))) %>% 
-  select(age, bmi, sex_as_number, smoker_as_number, charges) %>% cor()
-
-cluster3Correlations <- cluster3 %>% 
-  mutate(sex_as_number = as.numeric(as.factor(sex))) %>% 
-  mutate(smoker_as_number = as.numeric(as.factor(smoker))) %>% 
-  select(age, bmi, sex_as_number, smoker_as_number, charges) %>% cor()
-
-```
 
 {{< include feature-engineering.qmd >}}
 
