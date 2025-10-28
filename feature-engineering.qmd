@@ -1,0 +1,18 @@
+---
+
+format: html
+---
+
+## Feature Engineering
+
+One of the problems encountered when exploring the data was how skewed it was toward people without children. So, one thing we can do is collapse children into a boolean variable. When it comes to smoking, it makes sense to similarly turn this into a boolean variable to make it easier to use. The regions data has no clear ordering, so including it as-is could create some problems, especially considering the size of the dataset. Also, it is not very well correlated with charges, but has some correlations to other features, so I think it is likely to create overfitting problems. Sex is could create similar problems, since it is overrepresented in some of the clusters identified earlier.
+
+```{r}
+engineered_data <- 
+  raw_data %>% mutate(hasChildren = children > 0 ) %>% 
+  mutate(hasChildren = as.numeric(hasChildren) ) %>% 
+  mutate(isSmoker = smoker=="yes") %>% 
+  mutate(isSmoker = as.numeric(isSmoker)) %>% 
+  select(age, bmi, hasChildren, isSmoker, charges)
+  
+```

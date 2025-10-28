@@ -1,0 +1,481 @@
+---
+title: "Claims Analysis"
+format: html
+---
+
+## Data exploration:
+
+```{r}
+library("tidyverse")
+raw_data <- read.csv("./data/insurance.csv")
+```
+
+The dataset I'm using is Medical Costs Personal. It is a convenient dataset because it does not contain any missing values. It has a few limitations. Mainly that it pretty small, with only 1338 values. Also, it has not been updated in the last 8 years.
+
+```{r}
+
+summary(raw_data)
+```
+
+Before we begin modeling, its important to look at the distribution of the insurance charges on its own to see if we can get a feel for this data:
+
+```{r}
+
+hist(
+  raw_data$charges,
+  main="Distribution of charges",
+  xlab="Charge",
+  ylab="frequency",
+  col="lightblue",
+  breaks=50
+)
+
+```
+
+Clearly, the data is mostly clustered around charges \< 15,000, and then has two smaller, looser clusters arround 20,000 and 35,000. The Median is 9382, and the Mean is 13270, so we can describe this distribution as having a long head. It is important to find out the characteristics of this head to prevent bias in charge prediction and modeling. Lets plot charge agains a few of the numeric values to see the distribution:
+
+```{r}
+charges_and_age <- raw_data %>% select(age, charges)
+plot(charges_and_age)
+```
+
+```{r}
+charges_and_bmi <- raw_data %>% select(bmi, charges)
+plot(charges_and_bmi)
+```
+
+```{r}
+raw_data %>% 
+  select(smoker, charges) %>% 
+  mutate(smoker_as_factor = as.factor(smoker)) %>%
+  select(smoker_as_factor, charges) %>% plot()
+```
+
+```{r}
+raw_data %>% 
+  mutate(sex_as_factor = as.factor(sex)) %>%
+  select(sex_as_factor, charges) %>% plot()
+```
+
+When separating the data out visually like this, its pretty clear that one of the clusters consist of people with higher BMI. The other cluster is harder to find indentifying characteristics for, since most of it is of people with BMI less than 30. It is possible that this cluster is centered around smoking, or some other variable not in this data set. Since the second and third quartiles of the smoking population seem to map fairly closely to the middle cluster in the first histogram, I think it is fairly highly that this middle cluster consists mostly of smokers.
+
+```{r}
+
+raw_data %>% 
+  mutate(region_as_factor = as.factor(region)) %>%
+  select(region_as_factor, charges) %>% plot()
+
+```
+
+Other than smoking, the categorical variables don't seem to have any obviously visible correlation.
+
+```{r}
+raw_data %>% select(children, charges) %>% plot()
+```
+
+## Correlative Analysis
+
+This does show a gap in the data of people with at least 5 children and high charges, which could present a problem in a predictive model.
+
+```{r}
+correlations <- raw_data %>% 
+  mutate(sex_as_number = as.numeric(as.factor(sex))) %>% 
+  mutate(region_as_number = as.numeric(as.factor(region))) %>% 
+  mutate(smoker_as_number = as.numeric(as.factor(smoker))) %>% 
+  select(age, bmi, children,  sex_as_number, region_as_number, smoker_as_number, charges) %>% cor()
+```
+
+Age, BMI, smoking, and charges are all somewhat positively correlated. Other than that, everything is pretty loosely spread throughout. This makes sense intuitively, as being old, having a high BMI, and smoking are all risk factors for potentially expensive medical problems. However, the correlation between the risk factors could lead to some false positive when building predictive models.
+
+## Class imbalance Assessment:
+
+As we already saw, this dataset is only of claims made, which means that is represents a tiny minority of policy holders. It also contains some imbalance, as alreaady shown, with most of the claims being far lower than the mean. Lets explore the dataset a little further to see if there are any imbalances among the other variables.
+
+```{r}
+
+hist(raw_data$age, main = "Distrubution of Ages", xlab = "Age", ylab = "frequency", col = "lightblue", breaks = 50)
+
+
+```
+
+```{r}
+summary(raw_data$age)
+```
+
+Of course, one constraint on this data is that it only contains adults. The datapoints are pretty uniformally spread among different agegroups, with 18-year-olds being overrepresented.
+
+```{r}
+summary(raw_data$bmi)
+
+```
+
+```{r}
+
+hist(raw_data$bmi, main = "Distrubution of BMI", xlab = "BMI", ylab = "frequency", col = "lightblue", breaks = 50)
+
+
+```
+
+The BMI data looks more or less normally distributed. with the mean and median being extremely close.
+
+### Categorical values:
+
+```{r}
+sex_count <- table(raw_data$sex)
+smoker_count <- table(raw_data$smoker)
+region_count <- table(raw_data$region)
+children_count <- table(raw_data$children)
+
+
+print(sex_count)
+print(smoker_count)
+print(region_count)
+print(children_count)
+```
+
+The only imbalances here are with smokers and non-smokers, and with the children variable, though it makes sense that there are more non-smokers than smokers. However, since smoking is a known risk factor for disease and correlated with higher count, it could possibly cause some other categories to be over-represented in high claims. The children variable is highly unbalanced, with lower values being much more highly represented.
+
+## Diving deeper into the clusters
+
+I already speculated a little bit about the different clusters in the data, as they appear to show up in the general distribution of charges, and perhaps to have something to do with BMI and smoking. In order to explore this idea, lets try to isolate the clusters, first by filtering only by amount charged.
+
+```{r}
+A <- raw_data %>% filter(charges < 15000)
+B <- raw_data %>% filter((charges >= 15000) & (charges < 32000))
+C <- raw_data %>% filter(charges >= 32000)
+
+```
+
+First, lets retry the correlation analysis. The ages and bmi graphs seemes to show different groups, possibly with different relationships. Lets see if these partitions show that more clearly.
+
+```{r}
+
+getCorrelations <- function(df){
+  correlations <- df %>% 
+  mutate(sex_as_number = as.numeric(as.factor(sex))) %>% 
+  mutate(region_as_number = as.numeric(as.factor(region))) %>% 
+  mutate(smoker_as_number = as.numeric(as.factor(smoker))) %>% 
+  select(age, bmi, children,  sex_as_number, region_as_number, smoker_as_number, charges) %>% cor()
+  
+  return (correlations)
+}
+
+
+
+Acor <- getCorrelations(A)
+BCor <- getCorrelations(B)
+CCor <- getCorrelations(C)
+
+
+```
+
+```{r}
+A %>% select(age, charges) %>% plot()
+```
+
+```{r}
+B %>%  select(age, charges) %>% plot()
+```
+
+```{r}
+C %>% select(age, charges) %>% plot()
+```
+
+### Cluster A
+
+```{r}
+table(A$smoker)
+```
+
+```{r}
+
+table(A$sex)
+```
+
+```{r}
+table(A$sex)
+```
+
+```{r}
+table(A$children)
+```
+
+```{r}
+hist(A$bmi, main = "Distrubution of BMI", xlab = "BMI", ylab = "frequency", col = "lightblue", breaks = 50)
+hist(A$age, main = "Distrubution of age", xlab = "age", ylab = "frequency", col = "lightblue", breaks = 50)
+summary(A)
+```
+
+This main difference between Cluster A and the data-set at large seems to be the prevalence of smokers. A consists almost entirely of non-smokers. In fact, cluster A contains 91% of all non-smokers. \### Cluster B
+
+```{r}
+summary(B)
+```
+
+```{r}
+table(B$smoker)
+```
+
+```{r}
+table(B$sex)
+```
+
+```{r}
+table(B$children)
+```
+
+```{r}
+hist(B$bmi, main="Distribution of BMI", xlab = "BMI", ylab = "frequency", col="lightblue", breaks=20)
+hist(B$age, main="Distribution of age", xlab = "BMI", ylab = "frequency", col="lightblue", breaks=20)
+```
+
+```{r}
+summary(B)
+```
+
+Here, the main difference again appears to be distribution of smokers. People in cluster B are more likely to be smokers. They mean and median BMIs are also lower than the general dataset.
+
+### Cluster C
+
+```{r}
+summary(C)
+```
+
+```{r}
+table(C$smoker)
+```
+
+```{r}
+table(C$sex)
+```
+
+```{r}
+table(C$children)
+```
+
+Cluster C contains almost entirely smokers. It has also has a higher median and mean BMI than the average, and is more male than the other groups. Among this group, BMI is correlated with high charges much more than in other groups:
+
+```{r}
+C %>% select(bmi, charges) %>% plot()
+```
+
+```{r}
+A %>% select(bmi, charges) %>% plot()
+B %>% select(bmi, charges) %>% plot()
+```
+
+Let's try a more sophisticated method of clustering: \## K-Means Clustering
+
+```{r}
+kmeans_clusters <- raw_data %>% 
+  mutate(sex_as_factor = as.numeric(as.factor(sex))) %>% 
+  mutate(smoker_as_factor = as.numeric(as.factor(smoker))) %>% 
+  select(age, bmi, sex_as_factor, smoker_as_factor, children, charges) %>% 
+  scale(center = FALSE, scale = TRUE ) %>% 
+  kmeans(centers = 3, iter.max = 200, nstart = 6 )
+
+
+
+```
+
+Now we can compare these clusters to the partitions described above.
+
+```{r}
+data_with_cluster_labels <- raw_data
+data_with_cluster_labels$cluster <- kmeans_clusters$cluster
+```
+
+```{r}
+data_with_cluster_labels %>% 
+  group_by(cluster) %>% 
+summary()
+```
+
+```{r}
+data_with_cluster_labels %>% 
+  group_by(cluster) %>% 
+  select(sex) %>%
+  table()
+```
+
+```{r}
+  data_with_cluster_labels %>% 
+  group_by(cluster) %>% 
+  select(smoker) %>% 
+  table()
+```
+
+Cluster 3 looks the most like partition A above, being the largest and containing almost exclusively non-smokers. Unlike the partitions above, however, every category here hasa a strong majority of either smokers or non-smokers. The clusters mostly have a pretty even sex ratio, with cluster 2 being more male.
+
+```{r}
+cluster1 <- data_with_cluster_labels %>% 
+  filter(cluster == 1)
+cluster2 = data_with_cluster_labels %>% 
+  filter(cluster == 2)
+cluster3 = data_with_cluster_labels %>% 
+  filter(cluster == 3)
+```
+
+```{r}
+hist(cluster1$charges,
+     main="Distribution of charges in cluster 1",
+     xlab = "charges",
+     ylab = "frequency",
+     col="lightblue",
+     breaks = 50)
+
+hist(cluster2$charges,
+     main="Distribution of charges in cluster 2",
+     xlab = "charges",
+     ylab = "frequency",
+     col="lightblue",
+     breaks = 50)
+
+hist(cluster3$charges,
+     main="Distribution of charges in cluster 3",
+     xlab = "charges",
+     ylab = "frequency",
+     col="lightblue",
+     breaks = 50)
+
+
+```
+
+```{r}
+hist(cluster1$age,
+     main="Distribution of ages in cluster 1",
+     xlab = "charges",
+     ylab = "frequency",
+     col="lightblue",
+     breaks = 50)
+
+hist(cluster2$age,
+     main="Distribution of ages in cluster 2",
+     xlab = "charges",
+     ylab = "frequency",
+     col="lightblue",
+     breaks = 50)
+
+hist(cluster3$age,
+     main="Distribution of ages in cluster 3",
+     xlab = "charges",
+     ylab = "frequency",
+     col="lightblue",
+     breaks = 50)
+
+summary(cluster1$age)
+summary(cluster2$age)
+summary(cluster3$age)
+
+
+```
+
+```{r}
+hist(cluster1$bmi,
+     main="Distribution of bmi in cluster 1",
+     xlab = "charges",
+     ylab = "frequency",
+     col="lightblue",
+     breaks = 50)
+
+hist(cluster2$bmi,
+     main="Distribution of bmi in cluster 2",
+     xlab = "charges",
+     ylab = "frequency",
+     col="lightblue",
+     breaks = 50)
+
+hist(cluster3$bmi,
+     main="Distribution of bmi in cluster 3",
+     xlab = "charges",
+     ylab = "frequency",
+     col="lightblue",
+     breaks = 50)
+
+summary(cluster1$bmi)
+summary(cluster2$bmi)
+summary(cluster3$bmi)
+
+cluster1Correlations <- cluster1 %>% 
+  mutate(sex_as_number = as.numeric(as.factor(sex))) %>% 
+  mutate(smoker_as_number = as.numeric(as.factor(smoker))) %>% 
+  select(age, bmi, sex_as_number, smoker_as_number, charges) %>% cor()
+
+cluster2Correlations <- cluster2 %>% 
+  mutate(sex_as_number = as.numeric(as.factor(sex))) %>% 
+  mutate(smoker_as_number = as.numeric(as.factor(smoker))) %>% 
+  select(age, bmi, sex_as_number, smoker_as_number, charges) %>% cor()
+
+cluster3Correlations <- cluster3 %>% 
+  mutate(sex_as_number = as.numeric(as.factor(sex))) %>% 
+  mutate(smoker_as_number = as.numeric(as.factor(smoker))) %>% 
+  select(age, bmi, sex_as_number, smoker_as_number, charges) %>% cor()
+
+```
+
+{{< include feature-engineering.qmd >}}
+
+## Model Code:
+
+```{python}
+#| eval: false
+#| file: trainAndTestModels.py
+#| include: true
+```
+
+## Model Selection
+
+We will use a linear regression model as a baseline/sanity check for the more complex models. Because this data-set is quite small, it is a bad idea to use models that require very large data sets. Instead, we will use a random forest model and an xgboost model. Also, I will avoid hyperparamater tuning, since it would likely lead to overfitting on such a small dataset
+
+## Results
+
+```         
+LinearRidge:
+  CV MAE: $4,406.57 (±$343.06)
+  Test RMSE: $5,438.57
+  Test MAE: $3,928.22
+  Test R²: 0.792
+
+RandomForest:
+  CV MAE: $2,840.81 (±$255.84)
+  Test RMSE: $3,294.50
+  Test MAE: $1,977.61
+  Test R²: 0.924
+
+XGBoost:
+  CV MAE: $2,825.26 (±$225.83)
+  Test RMSE: $3,274.38
+  Test MAE: $1,951.44
+  Test R²: 0.925
+```
+
+The Linear Model performed quite well, which hints that the relationships in this data-set are not very complex. In fact, it is possible that that the random forest and xgboost models are overfitting to the data, as their R\^2 values are quite high. Both the Random Forest and XGBoost regression model had significantly higher performance, although they are roughly equal. Now, lets take a look at how each of the models predict the data. First, examining the weights on the linear model:
+
+```         
+Coefficients: [  257.43437022   323.65919547  1195.42842368 22495.10602308]
+Intercept: -11859.157265789609
+```
+
+These make sense: looking at the binary variables, smoking is much more heavily weighed than having children, and BMI and age both having strong positive correlations.
+
+Examining the random forest model, we can see that the most important feature by far is the smoking indicator, and the least important feature is the children indicator: ![](predicted-vs-actual-changes-lin.png)
+
+```         
+random forest importances: [0.11896813 0.17759035 0.00896635 0.69447517]
+```
+
+Similarly, for the XGBoost Model, the smoking indicator is the most heavily weighed. In this case, it is even more heavily weighed, which is interesting because it has very similar performance to the random forest model. The order of features is also the same, with the biggest difference being how much more important smoking is than the other features in the xgboost model.
+
+![](predicted-vs-actual-changes-random-forest.png)
+
+```         
+XGBoost importances: [0.02617665 0.03557994 0.00957726 0.9286662 ]
+```
+
+![](predicted-vs-actual-changes-xgboost.png)
+
+## Business Insights:
+
+When considering the possible business insights that this data could provide, it is of course important to remember all of the limitations mentioned above, particularly the size of the data set, as well as the fact that this data set does not contain information on policy holders with no charges. So, while none of these models can or should be used to accurately predict the amount that a claims-holder will charge their health insurance, they could still be informative for figuring out how to price health insurance, by placing a cost on the worst case scenario (that a policy holder takes out a claim), and then weighting that by the probability that they take out a claim at all. It could also be worthwhile to further explore the clusters identified in the data exploration section to see if pricing can be adjusted for more specific populations. The biggest take away from all of the models, supported by the difference in distributions of charges for smokers and non-smokers, is that smokers are much more expensive to insure than non-smokers, and that smoking is more important in predicting expensive charges than even age and bmi, and remains predictive among different age and bmi groups.
+
+Similarly, even though age is very strongly correlated with higher costs when the data set is partitioned into cost buckets, it is not very good at predicting which bucket a policy holder will end up in, which is why it is relatively unimportant in the predictive models. Similarly, BMI is not very good at predicting costs on its own.
