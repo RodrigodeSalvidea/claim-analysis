@@ -678,390 +678,147 @@ female   male
 </div>
 </div>
 </div>
-<p>Let’s try a more sophisticated method of clustering: ## K-Means Clustering</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>kmeans_clusters <span class="ot">&lt;-</span> raw_data <span class="sc">%&gt;%</span> </span>
-<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sex_as_factor =</span> <span class="fu">as.numeric</span>(<span class="fu">as.factor</span>(sex))) <span class="sc">%&gt;%</span> </span>
-<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">smoker_as_factor =</span> <span class="fu">as.numeric</span>(<span class="fu">as.factor</span>(smoker))) <span class="sc">%&gt;%</span> </span>
-<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(age, bmi, sex_as_factor, smoker_as_factor, children, charges) <span class="sc">%&gt;%</span> </span>
-<span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale</span>(<span class="at">center =</span> <span class="cn">FALSE</span>, <span class="at">scale =</span> <span class="cn">TRUE</span> ) <span class="sc">%&gt;%</span> </span>
-<span id="cb74-6"><a href="#cb74-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kmeans</span>(<span class="at">centers =</span> <span class="dv">3</span>, <span class="at">iter.max =</span> <span class="dv">200</span>, <span class="at">nstart =</span> <span class="dv">6</span> )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Now we can compare these clusters to the partitions described above.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>data_with_cluster_labels <span class="ot">&lt;-</span> raw_data</span>
-<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>data_with_cluster_labels<span class="sc">$</span>cluster <span class="ot">&lt;-</span> kmeans_clusters<span class="sc">$</span>cluster</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>data_with_cluster_labels <span class="sc">%&gt;%</span> </span>
-<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(cluster) <span class="sc">%&gt;%</span> </span>
-<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>      age            sex                 bmi           children    
- Min.   :18.00   Length:1338        Min.   :15.96   Min.   :0.000  
- 1st Qu.:27.00   Class :character   1st Qu.:26.30   1st Qu.:0.000  
- Median :39.00   Mode  :character   Median :30.40   Median :1.000  
- Mean   :39.21                      Mean   :30.66   Mean   :1.095  
- 3rd Qu.:51.00                      3rd Qu.:34.69   3rd Qu.:2.000  
- Max.   :64.00                      Max.   :53.13   Max.   :5.000  
-    smoker             region             charges         cluster    
- Length:1338        Length:1338        Min.   : 1122   Min.   :1.00  
- Class :character   Class :character   1st Qu.: 4740   1st Qu.:1.00  
- Mode  :character   Mode  :character   Median : 9382   Median :2.00  
-                                       Mean   :13270   Mean   :1.89  
-                                       3rd Qu.:16640   3rd Qu.:2.00  
-                                       Max.   :63770   Max.   :3.00  </code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>data_with_cluster_labels <span class="sc">%&gt;%</span> </span>
-<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(cluster) <span class="sc">%&gt;%</span> </span>
-<span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(sex) <span class="sc">%&gt;%</span></span>
-<span id="cb78-4"><a href="#cb78-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">table</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Adding missing grouping variables: `cluster`</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>       sex
-cluster female male
-      1    189  181
-      2    379  366
-      3     94  129</code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>  data_with_cluster_labels <span class="sc">%&gt;%</span> </span>
-<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(cluster) <span class="sc">%&gt;%</span> </span>
-<span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(smoker) <span class="sc">%&gt;%</span> </span>
-<span id="cb81-4"><a href="#cb81-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">table</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Adding missing grouping variables: `cluster`</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>       smoker
-cluster  no yes
-      1 337  33
-      2 705  40
-      3  22 201</code></pre>
-</div>
-</div>
-<p>Cluster 3 looks the most like partition A above, being the largest and containing almost exclusively non-smokers. Unlike the partitions above, however, every category here has a strong majority of either smokers or non-smokers. The clusters mostly have a pretty even sex ratio, with cluster 2 being more male.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a>cluster1 <span class="ot">&lt;-</span> data_with_cluster_labels <span class="sc">%&gt;%</span> </span>
-<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(cluster <span class="sc">==</span> <span class="dv">1</span>)</span>
-<span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a>cluster2 <span class="ot">=</span> data_with_cluster_labels <span class="sc">%&gt;%</span> </span>
-<span id="cb84-4"><a href="#cb84-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(cluster <span class="sc">==</span> <span class="dv">2</span>)</span>
-<span id="cb84-5"><a href="#cb84-5" aria-hidden="true" tabindex="-1"></a>cluster3 <span class="ot">=</span> data_with_cluster_labels <span class="sc">%&gt;%</span> </span>
-<span id="cb84-6"><a href="#cb84-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(cluster <span class="sc">==</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb85"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(cluster1<span class="sc">$</span>charges,</span>
-<span id="cb85-2"><a href="#cb85-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"Distribution of charges in cluster 1"</span>,</span>
-<span id="cb85-3"><a href="#cb85-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"charges"</span>,</span>
-<span id="cb85-4"><a href="#cb85-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"frequency"</span>,</span>
-<span id="cb85-5"><a href="#cb85-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">col=</span><span class="st">"lightblue"</span>,</span>
-<span id="cb85-6"><a href="#cb85-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">breaks =</span> <span class="dv">50</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="claims-analysis_files/figure-html/unnamed-chunk-44-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="sourceCode cell-code" id="cb86"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(cluster2<span class="sc">$</span>charges,</span>
-<span id="cb86-2"><a href="#cb86-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"Distribution of charges in cluster 2"</span>,</span>
-<span id="cb86-3"><a href="#cb86-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"charges"</span>,</span>
-<span id="cb86-4"><a href="#cb86-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"frequency"</span>,</span>
-<span id="cb86-5"><a href="#cb86-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">col=</span><span class="st">"lightblue"</span>,</span>
-<span id="cb86-6"><a href="#cb86-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">breaks =</span> <span class="dv">50</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="claims-analysis_files/figure-html/unnamed-chunk-44-2.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(cluster3<span class="sc">$</span>charges,</span>
-<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"Distribution of charges in cluster 3"</span>,</span>
-<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"charges"</span>,</span>
-<span id="cb87-4"><a href="#cb87-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"frequency"</span>,</span>
-<span id="cb87-5"><a href="#cb87-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">col=</span><span class="st">"lightblue"</span>,</span>
-<span id="cb87-6"><a href="#cb87-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">breaks =</span> <span class="dv">50</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="claims-analysis_files/figure-html/unnamed-chunk-44-3.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb88"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(cluster1<span class="sc">$</span>age,</span>
-<span id="cb88-2"><a href="#cb88-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"Distribution of ages in cluster 1"</span>,</span>
-<span id="cb88-3"><a href="#cb88-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"charges"</span>,</span>
-<span id="cb88-4"><a href="#cb88-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"frequency"</span>,</span>
-<span id="cb88-5"><a href="#cb88-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">col=</span><span class="st">"lightblue"</span>,</span>
-<span id="cb88-6"><a href="#cb88-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">breaks =</span> <span class="dv">50</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="claims-analysis_files/figure-html/unnamed-chunk-45-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(cluster2<span class="sc">$</span>age,</span>
-<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"Distribution of ages in cluster 2"</span>,</span>
-<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"charges"</span>,</span>
-<span id="cb89-4"><a href="#cb89-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"frequency"</span>,</span>
-<span id="cb89-5"><a href="#cb89-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">col=</span><span class="st">"lightblue"</span>,</span>
-<span id="cb89-6"><a href="#cb89-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">breaks =</span> <span class="dv">50</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="claims-analysis_files/figure-html/unnamed-chunk-45-2.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="sourceCode cell-code" id="cb90"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(cluster3<span class="sc">$</span>age,</span>
-<span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"Distribution of ages in cluster 3"</span>,</span>
-<span id="cb90-3"><a href="#cb90-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"charges"</span>,</span>
-<span id="cb90-4"><a href="#cb90-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"frequency"</span>,</span>
-<span id="cb90-5"><a href="#cb90-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">col=</span><span class="st">"lightblue"</span>,</span>
-<span id="cb90-6"><a href="#cb90-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">breaks =</span> <span class="dv">50</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="claims-analysis_files/figure-html/unnamed-chunk-45-3.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(cluster1<span class="sc">$</span>age)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-  18.00   30.00   39.00   39.58   49.00   64.00 </code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb93"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(cluster2<span class="sc">$</span>age)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-  18.00   24.00   36.00   38.04   52.00   64.00 </code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb95"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(cluster3<span class="sc">$</span>age)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-  18.00   31.00   44.00   42.49   53.00   64.00 </code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb97"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(cluster1<span class="sc">$</span>bmi,</span>
-<span id="cb97-2"><a href="#cb97-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"Distribution of bmi in cluster 1"</span>,</span>
-<span id="cb97-3"><a href="#cb97-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"charges"</span>,</span>
-<span id="cb97-4"><a href="#cb97-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"frequency"</span>,</span>
-<span id="cb97-5"><a href="#cb97-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">col=</span><span class="st">"lightblue"</span>,</span>
-<span id="cb97-6"><a href="#cb97-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">breaks =</span> <span class="dv">50</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="claims-analysis_files/figure-html/unnamed-chunk-46-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="sourceCode cell-code" id="cb98"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(cluster2<span class="sc">$</span>bmi,</span>
-<span id="cb98-2"><a href="#cb98-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"Distribution of bmi in cluster 2"</span>,</span>
-<span id="cb98-3"><a href="#cb98-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"charges"</span>,</span>
-<span id="cb98-4"><a href="#cb98-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"frequency"</span>,</span>
-<span id="cb98-5"><a href="#cb98-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">col=</span><span class="st">"lightblue"</span>,</span>
-<span id="cb98-6"><a href="#cb98-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">breaks =</span> <span class="dv">50</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="claims-analysis_files/figure-html/unnamed-chunk-46-2.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="sourceCode cell-code" id="cb99"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(cluster3<span class="sc">$</span>bmi,</span>
-<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"Distribution of bmi in cluster 3"</span>,</span>
-<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"charges"</span>,</span>
-<span id="cb99-4"><a href="#cb99-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"frequency"</span>,</span>
-<span id="cb99-5"><a href="#cb99-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">col=</span><span class="st">"lightblue"</span>,</span>
-<span id="cb99-6"><a href="#cb99-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">breaks =</span> <span class="dv">50</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="claims-analysis_files/figure-html/unnamed-chunk-46-3.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="sourceCode cell-code" id="cb100"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(cluster1<span class="sc">$</span>bmi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-  16.82   25.70   30.11   30.21   33.87   48.07 </code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb102"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(cluster2<span class="sc">$</span>bmi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-  15.96   25.93   29.90   30.28   34.10   53.13 </code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb104"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb104-1"><a href="#cb104-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(cluster3<span class="sc">$</span>bmi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-  17.77   28.34   32.70   32.71   36.34   52.58 </code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb106"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a>cluster1Correlations <span class="ot">&lt;-</span> cluster1 <span class="sc">%&gt;%</span> </span>
-<span id="cb106-2"><a href="#cb106-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sex_as_number =</span> <span class="fu">as.numeric</span>(<span class="fu">as.factor</span>(sex))) <span class="sc">%&gt;%</span> </span>
-<span id="cb106-3"><a href="#cb106-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">smoker_as_number =</span> <span class="fu">as.numeric</span>(<span class="fu">as.factor</span>(smoker))) <span class="sc">%&gt;%</span> </span>
-<span id="cb106-4"><a href="#cb106-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(age, bmi, sex_as_number, smoker_as_number, charges) <span class="sc">%&gt;%</span> <span class="fu">cor</span>()</span>
-<span id="cb106-5"><a href="#cb106-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb106-6"><a href="#cb106-6" aria-hidden="true" tabindex="-1"></a>cluster2Correlations <span class="ot">&lt;-</span> cluster2 <span class="sc">%&gt;%</span> </span>
-<span id="cb106-7"><a href="#cb106-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sex_as_number =</span> <span class="fu">as.numeric</span>(<span class="fu">as.factor</span>(sex))) <span class="sc">%&gt;%</span> </span>
-<span id="cb106-8"><a href="#cb106-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">smoker_as_number =</span> <span class="fu">as.numeric</span>(<span class="fu">as.factor</span>(smoker))) <span class="sc">%&gt;%</span> </span>
-<span id="cb106-9"><a href="#cb106-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(age, bmi, sex_as_number, smoker_as_number, charges) <span class="sc">%&gt;%</span> <span class="fu">cor</span>()</span>
-<span id="cb106-10"><a href="#cb106-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb106-11"><a href="#cb106-11" aria-hidden="true" tabindex="-1"></a>cluster3Correlations <span class="ot">&lt;-</span> cluster3 <span class="sc">%&gt;%</span> </span>
-<span id="cb106-12"><a href="#cb106-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sex_as_number =</span> <span class="fu">as.numeric</span>(<span class="fu">as.factor</span>(sex))) <span class="sc">%&gt;%</span> </span>
-<span id="cb106-13"><a href="#cb106-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">smoker_as_number =</span> <span class="fu">as.numeric</span>(<span class="fu">as.factor</span>(smoker))) <span class="sc">%&gt;%</span> </span>
-<span id="cb106-14"><a href="#cb106-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(age, bmi, sex_as_number, smoker_as_number, charges) <span class="sc">%&gt;%</span> <span class="fu">cor</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
 </section>
 </section>
 <section id="feature-engineering" class="level2">
 <h2 class="anchored" data-anchor-id="feature-engineering">Feature Engineering</h2>
 <p>One of the problems encountered when exploring the data was how skewed it was toward people without children. So, one thing we can do is collapse children into a boolean variable. When it comes to smoking, it makes sense to similarly turn this into a boolean variable to make it easier to use. The regions data has no clear ordering, so including it as-is could create some problems, especially considering the size of the dataset. Also, it is not very well correlated with charges, but has some correlations to other features, so I think it is likely to create overfitting problems. Sex is could create similar problems, since it is overrepresented in some of the clusters identified earlier.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb107"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a>engineered_data <span class="ot">&lt;-</span> </span>
-<span id="cb107-2"><a href="#cb107-2" aria-hidden="true" tabindex="-1"></a>  raw_data <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">hasChildren =</span> children <span class="sc">&gt;</span> <span class="dv">0</span> ) <span class="sc">%&gt;%</span> </span>
-<span id="cb107-3"><a href="#cb107-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">hasChildren =</span> <span class="fu">as.numeric</span>(hasChildren) ) <span class="sc">%&gt;%</span> </span>
-<span id="cb107-4"><a href="#cb107-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">isSmoker =</span> smoker<span class="sc">==</span><span class="st">"yes"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb107-5"><a href="#cb107-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">isSmoker =</span> <span class="fu">as.numeric</span>(isSmoker)) <span class="sc">%&gt;%</span> </span>
-<span id="cb107-6"><a href="#cb107-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(age, bmi, hasChildren, isSmoker, charges)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>engineered_data <span class="ot">&lt;-</span> </span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>  raw_data <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">hasChildren =</span> children <span class="sc">&gt;</span> <span class="dv">0</span> ) <span class="sc">%&gt;%</span> </span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">hasChildren =</span> <span class="fu">as.numeric</span>(hasChildren) ) <span class="sc">%&gt;%</span> </span>
+<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">isSmoker =</span> smoker<span class="sc">==</span><span class="st">"yes"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">isSmoker =</span> <span class="fu">as.numeric</span>(isSmoker)) <span class="sc">%&gt;%</span> </span>
+<span id="cb74-6"><a href="#cb74-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(age, bmi, hasChildren, isSmoker, charges)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="model-code" class="level2">
 <h2 class="anchored" data-anchor-id="model-code">Model Code:</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb108"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb108-2"><a href="#cb108-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb108-3"><a href="#cb108-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split, cross_val_score</span>
-<span id="cb108-4"><a href="#cb108-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> StandardScaler</span>
-<span id="cb108-5"><a href="#cb108-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> mean_squared_error, r2_score, mean_absolute_error</span>
-<span id="cb108-6"><a href="#cb108-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> Ridge</span>
-<span id="cb108-7"><a href="#cb108-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> RandomForestRegressor</span>
-<span id="cb108-8"><a href="#cb108-8" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> xgboost <span class="im">as</span> xgb</span>
-<span id="cb108-9"><a href="#cb108-9" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
-<span id="cb108-10"><a href="#cb108-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb108-11"><a href="#cb108-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb108-12"><a href="#cb108-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb108-13"><a href="#cb108-13" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> r.engineered_data</span>
-<span id="cb108-14"><a href="#cb108-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb108-15"><a href="#cb108-15" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> data.drop(<span class="st">'charges'</span>, axis <span class="op">=</span> <span class="dv">1</span>)</span>
-<span id="cb108-16"><a href="#cb108-16" aria-hidden="true" tabindex="-1"></a>Y <span class="op">=</span> data[<span class="st">"charges"</span>]</span>
-<span id="cb108-17"><a href="#cb108-17" aria-hidden="true" tabindex="-1"></a>X_train, X_test, Y_train, Y_test <span class="op">=</span> train_test_split(X, Y, test_size <span class="op">=</span> <span class="fl">.2</span>, random_state <span class="op">=</span> <span class="dv">13</span>)</span>
-<span id="cb108-18"><a href="#cb108-18" aria-hidden="true" tabindex="-1"></a>scaler <span class="op">=</span> StandardScaler()</span>
-<span id="cb108-19"><a href="#cb108-19" aria-hidden="true" tabindex="-1"></a>X_train_scaled <span class="op">=</span> scaler.fit_transform(X_train)</span>
-<span id="cb108-20"><a href="#cb108-20" aria-hidden="true" tabindex="-1"></a>X_test_scaled <span class="op">=</span> scaler.fit_transform(X_test)</span>
-<span id="cb108-21"><a href="#cb108-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb108-22"><a href="#cb108-22" aria-hidden="true" tabindex="-1"></a>models <span class="op">=</span> {</span>
-<span id="cb108-23"><a href="#cb108-23" aria-hidden="true" tabindex="-1"></a>  <span class="st">"LinearRidge"</span>: Ridge(alpha <span class="op">=</span> <span class="fl">10.0</span>),</span>
-<span id="cb108-24"><a href="#cb108-24" aria-hidden="true" tabindex="-1"></a>  <span class="st">"RandomForest"</span>: RandomForestRegressor(</span>
-<span id="cb108-25"><a href="#cb108-25" aria-hidden="true" tabindex="-1"></a>    max_depth<span class="op">=</span><span class="dv">6</span>,</span>
-<span id="cb108-26"><a href="#cb108-26" aria-hidden="true" tabindex="-1"></a>    min_samples_leaf <span class="op">=</span> <span class="dv">10</span>,</span>
-<span id="cb108-27"><a href="#cb108-27" aria-hidden="true" tabindex="-1"></a>    random_state <span class="op">=</span> <span class="dv">13</span></span>
-<span id="cb108-28"><a href="#cb108-28" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb108-29"><a href="#cb108-29" aria-hidden="true" tabindex="-1"></a>  <span class="st">"XGBoost"</span>: xgb.XGBRegressor(</span>
-<span id="cb108-30"><a href="#cb108-30" aria-hidden="true" tabindex="-1"></a>    n_estimators <span class="op">=</span> <span class="dv">100</span>,</span>
-<span id="cb108-31"><a href="#cb108-31" aria-hidden="true" tabindex="-1"></a>    max_depth <span class="op">=</span> <span class="dv">4</span>,</span>
-<span id="cb108-32"><a href="#cb108-32" aria-hidden="true" tabindex="-1"></a>    learning_rate <span class="op">=</span> <span class="fl">.05</span>,</span>
-<span id="cb108-33"><a href="#cb108-33" aria-hidden="true" tabindex="-1"></a>    min_child_weight <span class="op">=</span> <span class="dv">5</span>,</span>
-<span id="cb108-34"><a href="#cb108-34" aria-hidden="true" tabindex="-1"></a>    random_state <span class="op">=</span> <span class="dv">13</span></span>
-<span id="cb108-35"><a href="#cb108-35" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb108-36"><a href="#cb108-36" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb108-37"><a href="#cb108-37" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, model <span class="kw">in</span> models.items():</span>
-<span id="cb108-38"><a href="#cb108-38" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> name <span class="op">==</span> <span class="st">"LinearRidge"</span>:</span>
-<span id="cb108-39"><a href="#cb108-39" aria-hidden="true" tabindex="-1"></a>    X_tr, X_te <span class="op">=</span> X_train_scaled, X_test_scaled</span>
-<span id="cb108-40"><a href="#cb108-40" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span>:</span>
-<span id="cb108-41"><a href="#cb108-41" aria-hidden="true" tabindex="-1"></a>    X_tr, X_te <span class="op">=</span> X_train, X_test</span>
-<span id="cb108-42"><a href="#cb108-42" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb108-43"><a href="#cb108-43" aria-hidden="true" tabindex="-1"></a>  cross_validation_scores <span class="op">=</span> cross_val_score(</span>
-<span id="cb108-44"><a href="#cb108-44" aria-hidden="true" tabindex="-1"></a>    model, </span>
-<span id="cb108-45"><a href="#cb108-45" aria-hidden="true" tabindex="-1"></a>    X_tr, </span>
-<span id="cb108-46"><a href="#cb108-46" aria-hidden="true" tabindex="-1"></a>    Y_train,</span>
-<span id="cb108-47"><a href="#cb108-47" aria-hidden="true" tabindex="-1"></a>    cv <span class="op">=</span> <span class="dv">5</span>,</span>
-<span id="cb108-48"><a href="#cb108-48" aria-hidden="true" tabindex="-1"></a>    scoring <span class="op">=</span> <span class="st">'neg_mean_absolute_error'</span></span>
-<span id="cb108-49"><a href="#cb108-49" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb108-50"><a href="#cb108-50" aria-hidden="true" tabindex="-1"></a>  model.fit(X_tr, Y_train)</span>
-<span id="cb108-51"><a href="#cb108-51" aria-hidden="true" tabindex="-1"></a>  Y_pred <span class="op">=</span> model.predict(X_te)</span>
-<span id="cb108-52"><a href="#cb108-52" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb108-53"><a href="#cb108-53" aria-hidden="true" tabindex="-1"></a>  mse <span class="op">=</span> mean_squared_error(Y_test, Y_pred)</span>
-<span id="cb108-54"><a href="#cb108-54" aria-hidden="true" tabindex="-1"></a>  rmse <span class="op">=</span> np.sqrt(mse)</span>
-<span id="cb108-55"><a href="#cb108-55" aria-hidden="true" tabindex="-1"></a>  mae <span class="op">=</span> mean_absolute_error(Y_test, Y_pred)</span>
-<span id="cb108-56"><a href="#cb108-56" aria-hidden="true" tabindex="-1"></a>  r2 <span class="op">=</span> r2_score(Y_test, Y_pred)</span>
-<span id="cb108-57"><a href="#cb108-57" aria-hidden="true" tabindex="-1"></a>  results <span class="op">=</span> {</span>
-<span id="cb108-58"><a href="#cb108-58" aria-hidden="true" tabindex="-1"></a>        <span class="st">'CV MAE'</span>: <span class="op">-</span>cross_validation_scores.mean(),</span>
-<span id="cb108-59"><a href="#cb108-59" aria-hidden="true" tabindex="-1"></a>        <span class="st">'CV Std'</span>: cross_validation_scores.std(),</span>
-<span id="cb108-60"><a href="#cb108-60" aria-hidden="true" tabindex="-1"></a>        <span class="st">'Test RMSE'</span>: rmse,</span>
-<span id="cb108-61"><a href="#cb108-61" aria-hidden="true" tabindex="-1"></a>        <span class="st">'Test MAE'</span>: mae,</span>
-<span id="cb108-62"><a href="#cb108-62" aria-hidden="true" tabindex="-1"></a>        <span class="st">'Test R^2'</span>: r2</span>
-<span id="cb108-63"><a href="#cb108-63" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb108-64"><a href="#cb108-64" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">:"</span>)</span>
-<span id="cb108-65"><a href="#cb108-65" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="ss">f"  CV MAE: $</span><span class="sc">{</span><span class="op">-</span>cross_validation_scores<span class="sc">.</span>mean()<span class="sc">:,.2f}</span><span class="ss"> (±$</span><span class="sc">{</span>cross_validation_scores<span class="sc">.</span>std()<span class="sc">:,.2f}</span><span class="ss">)"</span>)</span>
-<span id="cb108-66"><a href="#cb108-66" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="ss">f"  Test RMSE: $</span><span class="sc">{</span>rmse<span class="sc">:,.2f}</span><span class="ss">"</span>)</span>
-<span id="cb108-67"><a href="#cb108-67" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="ss">f"  Test MAE: $</span><span class="sc">{</span>mae<span class="sc">:,.2f}</span><span class="ss">"</span>)</span>
-<span id="cb108-68"><a href="#cb108-68" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="ss">f"  Test R²: </span><span class="sc">{</span>r2<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
-<span id="cb108-69"><a href="#cb108-69" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb108-70"><a href="#cb108-70" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb108-71"><a href="#cb108-71" aria-hidden="true" tabindex="-1"></a>  <span class="co">#----</span></span>
-<span id="cb108-72"><a href="#cb108-72" aria-hidden="true" tabindex="-1"></a>linear_model <span class="op">=</span> models[<span class="st">"LinearRidge"</span>]</span>
-<span id="cb108-73"><a href="#cb108-73" aria-hidden="true" tabindex="-1"></a>random_forest_model <span class="op">=</span> models[<span class="st">"RandomForest"</span>]</span>
-<span id="cb108-74"><a href="#cb108-74" aria-hidden="true" tabindex="-1"></a>xgboost_model <span class="op">=</span> models[<span class="st">"XGBoost"</span>]</span>
-<span id="cb108-75"><a href="#cb108-75" aria-hidden="true" tabindex="-1"></a>linear_model.fit(X_train, Y_train)</span>
-<span id="cb108-76"><a href="#cb108-76" aria-hidden="true" tabindex="-1"></a>Y_pred <span class="op">=</span> linear_model.predict(X_test)</span>
-<span id="cb108-77"><a href="#cb108-77" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb108-78"><a href="#cb108-78" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb108-79"><a href="#cb108-79" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">6</span>))</span>
-<span id="cb108-80"><a href="#cb108-80" aria-hidden="true" tabindex="-1"></a>plt.scatter(Y_test, Y_pred, alpha<span class="op">=</span><span class="fl">0.5</span>)</span>
-<span id="cb108-81"><a href="#cb108-81" aria-hidden="true" tabindex="-1"></a>plt.plot([Y_test.<span class="bu">min</span>(), Y_test.<span class="bu">max</span>()], </span>
-<span id="cb108-82"><a href="#cb108-82" aria-hidden="true" tabindex="-1"></a>         [Y_test.<span class="bu">min</span>(), Y_test.<span class="bu">max</span>()], </span>
-<span id="cb108-83"><a href="#cb108-83" aria-hidden="true" tabindex="-1"></a>         <span class="st">'r--'</span>, lw<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb108-84"><a href="#cb108-84" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Actual Charges'</span>)</span>
-<span id="cb108-85"><a href="#cb108-85" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Predicted Charges'</span>)</span>
-<span id="cb108-86"><a href="#cb108-86" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Predicted vs Actual Charges -- Linear Model'</span>)</span>
-<span id="cb108-87"><a href="#cb108-87" aria-hidden="true" tabindex="-1"></a>plt.savefig(<span class="st">'predicted-vs-actual-changes-lin.png'</span>)</span>
-<span id="cb108-88"><a href="#cb108-88" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb108-89"><a href="#cb108-89" aria-hidden="true" tabindex="-1"></a>coefficients <span class="op">=</span> linear_model.coef_</span>
-<span id="cb108-90"><a href="#cb108-90" aria-hidden="true" tabindex="-1"></a>intercept <span class="op">=</span> linear_model.intercept_</span>
-<span id="cb108-91"><a href="#cb108-91" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Coefficients:"</span>, coefficients)</span>
-<span id="cb108-92"><a href="#cb108-92" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Intercept:"</span>, intercept)</span>
-<span id="cb108-93"><a href="#cb108-93" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb108-94"><a href="#cb108-94" aria-hidden="true" tabindex="-1"></a>plt.close()</span>
-<span id="cb108-95"><a href="#cb108-95" aria-hidden="true" tabindex="-1"></a>random_forest_model.fit(X_train, Y_train)</span>
-<span id="cb108-96"><a href="#cb108-96" aria-hidden="true" tabindex="-1"></a>Y_pred <span class="op">=</span> random_forest_model.predict(X_test)</span>
-<span id="cb108-97"><a href="#cb108-97" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">6</span>))</span>
-<span id="cb108-98"><a href="#cb108-98" aria-hidden="true" tabindex="-1"></a>plt.scatter(Y_test, Y_pred, alpha<span class="op">=</span><span class="fl">0.5</span>)</span>
-<span id="cb108-99"><a href="#cb108-99" aria-hidden="true" tabindex="-1"></a>plt.plot([Y_test.<span class="bu">min</span>(), Y_test.<span class="bu">max</span>()], </span>
-<span id="cb108-100"><a href="#cb108-100" aria-hidden="true" tabindex="-1"></a>         [Y_test.<span class="bu">min</span>(), Y_test.<span class="bu">max</span>()], </span>
-<span id="cb108-101"><a href="#cb108-101" aria-hidden="true" tabindex="-1"></a>         <span class="st">'r--'</span>, lw<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb108-102"><a href="#cb108-102" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Actual Charges'</span>)</span>
-<span id="cb108-103"><a href="#cb108-103" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Predicted Charges'</span>)</span>
-<span id="cb108-104"><a href="#cb108-104" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Predicted vs Actual Charges -- Random Forest Model'</span>)</span>
-<span id="cb108-105"><a href="#cb108-105" aria-hidden="true" tabindex="-1"></a>plt.savefig(<span class="st">'predicted-vs-actual-changes-random-forest.png'</span>)</span>
-<span id="cb108-106"><a href="#cb108-106" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb108-107"><a href="#cb108-107" aria-hidden="true" tabindex="-1"></a>importances <span class="op">=</span> random_forest_model.feature_importances_</span>
-<span id="cb108-108"><a href="#cb108-108" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"random forest importances: </span><span class="sc">{</span>importances<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb108-109"><a href="#cb108-109" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb108-110"><a href="#cb108-110" aria-hidden="true" tabindex="-1"></a>plt.close()</span>
-<span id="cb108-111"><a href="#cb108-111" aria-hidden="true" tabindex="-1"></a>xgboost_model.fit(X_train, Y_train)</span>
-<span id="cb108-112"><a href="#cb108-112" aria-hidden="true" tabindex="-1"></a>Y_pred <span class="op">=</span> xgboost_model.predict(X_test)</span>
-<span id="cb108-113"><a href="#cb108-113" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">6</span>))</span>
-<span id="cb108-114"><a href="#cb108-114" aria-hidden="true" tabindex="-1"></a>plt.scatter(Y_test, Y_pred, alpha<span class="op">=</span><span class="fl">0.5</span>)</span>
-<span id="cb108-115"><a href="#cb108-115" aria-hidden="true" tabindex="-1"></a>plt.plot([Y_test.<span class="bu">min</span>(), Y_test.<span class="bu">max</span>()], </span>
-<span id="cb108-116"><a href="#cb108-116" aria-hidden="true" tabindex="-1"></a>         [Y_test.<span class="bu">min</span>(), Y_test.<span class="bu">max</span>()], </span>
-<span id="cb108-117"><a href="#cb108-117" aria-hidden="true" tabindex="-1"></a>         <span class="st">'r--'</span>, lw<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb108-118"><a href="#cb108-118" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Actual Charges'</span>)</span>
-<span id="cb108-119"><a href="#cb108-119" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Predicted Charges'</span>)</span>
-<span id="cb108-120"><a href="#cb108-120" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Predicted vs Actual Charges --XGBoost Model'</span>)</span>
-<span id="cb108-121"><a href="#cb108-121" aria-hidden="true" tabindex="-1"></a>plt.savefig(<span class="st">'predicted-vs-actual-changes-xgboost.png'</span>)</span>
-<span id="cb108-122"><a href="#cb108-122" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb108-123"><a href="#cb108-123" aria-hidden="true" tabindex="-1"></a>importances <span class="op">=</span> xgboost_model.feature_importances_</span>
-<span id="cb108-124"><a href="#cb108-124" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"XGBoost: </span><span class="sc">{</span>importances<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb75"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split, cross_val_score</span>
+<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> StandardScaler</span>
+<span id="cb75-5"><a href="#cb75-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> mean_squared_error, r2_score, mean_absolute_error</span>
+<span id="cb75-6"><a href="#cb75-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> Ridge</span>
+<span id="cb75-7"><a href="#cb75-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> RandomForestRegressor</span>
+<span id="cb75-8"><a href="#cb75-8" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> xgboost <span class="im">as</span> xgb</span>
+<span id="cb75-9"><a href="#cb75-9" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb75-10"><a href="#cb75-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-11"><a href="#cb75-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-12"><a href="#cb75-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-13"><a href="#cb75-13" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> r.engineered_data</span>
+<span id="cb75-14"><a href="#cb75-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-15"><a href="#cb75-15" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> data.drop(<span class="st">'charges'</span>, axis <span class="op">=</span> <span class="dv">1</span>)</span>
+<span id="cb75-16"><a href="#cb75-16" aria-hidden="true" tabindex="-1"></a>Y <span class="op">=</span> data[<span class="st">"charges"</span>]</span>
+<span id="cb75-17"><a href="#cb75-17" aria-hidden="true" tabindex="-1"></a>X_train, X_test, Y_train, Y_test <span class="op">=</span> train_test_split(X, Y, test_size <span class="op">=</span> <span class="fl">.2</span>, random_state <span class="op">=</span> <span class="dv">13</span>)</span>
+<span id="cb75-18"><a href="#cb75-18" aria-hidden="true" tabindex="-1"></a>scaler <span class="op">=</span> StandardScaler()</span>
+<span id="cb75-19"><a href="#cb75-19" aria-hidden="true" tabindex="-1"></a>X_train_scaled <span class="op">=</span> scaler.fit_transform(X_train)</span>
+<span id="cb75-20"><a href="#cb75-20" aria-hidden="true" tabindex="-1"></a>X_test_scaled <span class="op">=</span> scaler.fit_transform(X_test)</span>
+<span id="cb75-21"><a href="#cb75-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-22"><a href="#cb75-22" aria-hidden="true" tabindex="-1"></a>models <span class="op">=</span> {</span>
+<span id="cb75-23"><a href="#cb75-23" aria-hidden="true" tabindex="-1"></a>  <span class="st">"LinearRidge"</span>: Ridge(alpha <span class="op">=</span> <span class="fl">10.0</span>),</span>
+<span id="cb75-24"><a href="#cb75-24" aria-hidden="true" tabindex="-1"></a>  <span class="st">"RandomForest"</span>: RandomForestRegressor(</span>
+<span id="cb75-25"><a href="#cb75-25" aria-hidden="true" tabindex="-1"></a>    max_depth<span class="op">=</span><span class="dv">6</span>,</span>
+<span id="cb75-26"><a href="#cb75-26" aria-hidden="true" tabindex="-1"></a>    min_samples_leaf <span class="op">=</span> <span class="dv">10</span>,</span>
+<span id="cb75-27"><a href="#cb75-27" aria-hidden="true" tabindex="-1"></a>    random_state <span class="op">=</span> <span class="dv">13</span></span>
+<span id="cb75-28"><a href="#cb75-28" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb75-29"><a href="#cb75-29" aria-hidden="true" tabindex="-1"></a>  <span class="st">"XGBoost"</span>: xgb.XGBRegressor(</span>
+<span id="cb75-30"><a href="#cb75-30" aria-hidden="true" tabindex="-1"></a>    n_estimators <span class="op">=</span> <span class="dv">100</span>,</span>
+<span id="cb75-31"><a href="#cb75-31" aria-hidden="true" tabindex="-1"></a>    max_depth <span class="op">=</span> <span class="dv">4</span>,</span>
+<span id="cb75-32"><a href="#cb75-32" aria-hidden="true" tabindex="-1"></a>    learning_rate <span class="op">=</span> <span class="fl">.05</span>,</span>
+<span id="cb75-33"><a href="#cb75-33" aria-hidden="true" tabindex="-1"></a>    min_child_weight <span class="op">=</span> <span class="dv">5</span>,</span>
+<span id="cb75-34"><a href="#cb75-34" aria-hidden="true" tabindex="-1"></a>    random_state <span class="op">=</span> <span class="dv">13</span></span>
+<span id="cb75-35"><a href="#cb75-35" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb75-36"><a href="#cb75-36" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb75-37"><a href="#cb75-37" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, model <span class="kw">in</span> models.items():</span>
+<span id="cb75-38"><a href="#cb75-38" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> name <span class="op">==</span> <span class="st">"LinearRidge"</span>:</span>
+<span id="cb75-39"><a href="#cb75-39" aria-hidden="true" tabindex="-1"></a>    X_tr, X_te <span class="op">=</span> X_train_scaled, X_test_scaled</span>
+<span id="cb75-40"><a href="#cb75-40" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span>:</span>
+<span id="cb75-41"><a href="#cb75-41" aria-hidden="true" tabindex="-1"></a>    X_tr, X_te <span class="op">=</span> X_train, X_test</span>
+<span id="cb75-42"><a href="#cb75-42" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb75-43"><a href="#cb75-43" aria-hidden="true" tabindex="-1"></a>  cross_validation_scores <span class="op">=</span> cross_val_score(</span>
+<span id="cb75-44"><a href="#cb75-44" aria-hidden="true" tabindex="-1"></a>    model, </span>
+<span id="cb75-45"><a href="#cb75-45" aria-hidden="true" tabindex="-1"></a>    X_tr, </span>
+<span id="cb75-46"><a href="#cb75-46" aria-hidden="true" tabindex="-1"></a>    Y_train,</span>
+<span id="cb75-47"><a href="#cb75-47" aria-hidden="true" tabindex="-1"></a>    cv <span class="op">=</span> <span class="dv">5</span>,</span>
+<span id="cb75-48"><a href="#cb75-48" aria-hidden="true" tabindex="-1"></a>    scoring <span class="op">=</span> <span class="st">'neg_mean_absolute_error'</span></span>
+<span id="cb75-49"><a href="#cb75-49" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb75-50"><a href="#cb75-50" aria-hidden="true" tabindex="-1"></a>  model.fit(X_tr, Y_train)</span>
+<span id="cb75-51"><a href="#cb75-51" aria-hidden="true" tabindex="-1"></a>  Y_pred <span class="op">=</span> model.predict(X_te)</span>
+<span id="cb75-52"><a href="#cb75-52" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb75-53"><a href="#cb75-53" aria-hidden="true" tabindex="-1"></a>  mse <span class="op">=</span> mean_squared_error(Y_test, Y_pred)</span>
+<span id="cb75-54"><a href="#cb75-54" aria-hidden="true" tabindex="-1"></a>  rmse <span class="op">=</span> np.sqrt(mse)</span>
+<span id="cb75-55"><a href="#cb75-55" aria-hidden="true" tabindex="-1"></a>  mae <span class="op">=</span> mean_absolute_error(Y_test, Y_pred)</span>
+<span id="cb75-56"><a href="#cb75-56" aria-hidden="true" tabindex="-1"></a>  r2 <span class="op">=</span> r2_score(Y_test, Y_pred)</span>
+<span id="cb75-57"><a href="#cb75-57" aria-hidden="true" tabindex="-1"></a>  results <span class="op">=</span> {</span>
+<span id="cb75-58"><a href="#cb75-58" aria-hidden="true" tabindex="-1"></a>        <span class="st">'CV MAE'</span>: <span class="op">-</span>cross_validation_scores.mean(),</span>
+<span id="cb75-59"><a href="#cb75-59" aria-hidden="true" tabindex="-1"></a>        <span class="st">'CV Std'</span>: cross_validation_scores.std(),</span>
+<span id="cb75-60"><a href="#cb75-60" aria-hidden="true" tabindex="-1"></a>        <span class="st">'Test RMSE'</span>: rmse,</span>
+<span id="cb75-61"><a href="#cb75-61" aria-hidden="true" tabindex="-1"></a>        <span class="st">'Test MAE'</span>: mae,</span>
+<span id="cb75-62"><a href="#cb75-62" aria-hidden="true" tabindex="-1"></a>        <span class="st">'Test R^2'</span>: r2</span>
+<span id="cb75-63"><a href="#cb75-63" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb75-64"><a href="#cb75-64" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">:"</span>)</span>
+<span id="cb75-65"><a href="#cb75-65" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="ss">f"  CV MAE: $</span><span class="sc">{</span><span class="op">-</span>cross_validation_scores<span class="sc">.</span>mean()<span class="sc">:,.2f}</span><span class="ss"> (±$</span><span class="sc">{</span>cross_validation_scores<span class="sc">.</span>std()<span class="sc">:,.2f}</span><span class="ss">)"</span>)</span>
+<span id="cb75-66"><a href="#cb75-66" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="ss">f"  Test RMSE: $</span><span class="sc">{</span>rmse<span class="sc">:,.2f}</span><span class="ss">"</span>)</span>
+<span id="cb75-67"><a href="#cb75-67" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="ss">f"  Test MAE: $</span><span class="sc">{</span>mae<span class="sc">:,.2f}</span><span class="ss">"</span>)</span>
+<span id="cb75-68"><a href="#cb75-68" aria-hidden="true" tabindex="-1"></a>  <span class="bu">print</span>(<span class="ss">f"  Test R²: </span><span class="sc">{</span>r2<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb75-69"><a href="#cb75-69" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb75-70"><a href="#cb75-70" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb75-71"><a href="#cb75-71" aria-hidden="true" tabindex="-1"></a>  <span class="co">#----</span></span>
+<span id="cb75-72"><a href="#cb75-72" aria-hidden="true" tabindex="-1"></a>linear_model <span class="op">=</span> models[<span class="st">"LinearRidge"</span>]</span>
+<span id="cb75-73"><a href="#cb75-73" aria-hidden="true" tabindex="-1"></a>random_forest_model <span class="op">=</span> models[<span class="st">"RandomForest"</span>]</span>
+<span id="cb75-74"><a href="#cb75-74" aria-hidden="true" tabindex="-1"></a>xgboost_model <span class="op">=</span> models[<span class="st">"XGBoost"</span>]</span>
+<span id="cb75-75"><a href="#cb75-75" aria-hidden="true" tabindex="-1"></a>linear_model.fit(X_train, Y_train)</span>
+<span id="cb75-76"><a href="#cb75-76" aria-hidden="true" tabindex="-1"></a>Y_pred <span class="op">=</span> linear_model.predict(X_test)</span>
+<span id="cb75-77"><a href="#cb75-77" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb75-78"><a href="#cb75-78" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb75-79"><a href="#cb75-79" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">6</span>))</span>
+<span id="cb75-80"><a href="#cb75-80" aria-hidden="true" tabindex="-1"></a>plt.scatter(Y_test, Y_pred, alpha<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb75-81"><a href="#cb75-81" aria-hidden="true" tabindex="-1"></a>plt.plot([Y_test.<span class="bu">min</span>(), Y_test.<span class="bu">max</span>()], </span>
+<span id="cb75-82"><a href="#cb75-82" aria-hidden="true" tabindex="-1"></a>         [Y_test.<span class="bu">min</span>(), Y_test.<span class="bu">max</span>()], </span>
+<span id="cb75-83"><a href="#cb75-83" aria-hidden="true" tabindex="-1"></a>         <span class="st">'r--'</span>, lw<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb75-84"><a href="#cb75-84" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Actual Charges'</span>)</span>
+<span id="cb75-85"><a href="#cb75-85" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Predicted Charges'</span>)</span>
+<span id="cb75-86"><a href="#cb75-86" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Predicted vs Actual Charges -- Linear Model'</span>)</span>
+<span id="cb75-87"><a href="#cb75-87" aria-hidden="true" tabindex="-1"></a>plt.savefig(<span class="st">'predicted-vs-actual-changes-lin.png'</span>)</span>
+<span id="cb75-88"><a href="#cb75-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-89"><a href="#cb75-89" aria-hidden="true" tabindex="-1"></a>coefficients <span class="op">=</span> linear_model.coef_</span>
+<span id="cb75-90"><a href="#cb75-90" aria-hidden="true" tabindex="-1"></a>intercept <span class="op">=</span> linear_model.intercept_</span>
+<span id="cb75-91"><a href="#cb75-91" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Coefficients:"</span>, coefficients)</span>
+<span id="cb75-92"><a href="#cb75-92" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Intercept:"</span>, intercept)</span>
+<span id="cb75-93"><a href="#cb75-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-94"><a href="#cb75-94" aria-hidden="true" tabindex="-1"></a>plt.close()</span>
+<span id="cb75-95"><a href="#cb75-95" aria-hidden="true" tabindex="-1"></a>random_forest_model.fit(X_train, Y_train)</span>
+<span id="cb75-96"><a href="#cb75-96" aria-hidden="true" tabindex="-1"></a>Y_pred <span class="op">=</span> random_forest_model.predict(X_test)</span>
+<span id="cb75-97"><a href="#cb75-97" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">6</span>))</span>
+<span id="cb75-98"><a href="#cb75-98" aria-hidden="true" tabindex="-1"></a>plt.scatter(Y_test, Y_pred, alpha<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb75-99"><a href="#cb75-99" aria-hidden="true" tabindex="-1"></a>plt.plot([Y_test.<span class="bu">min</span>(), Y_test.<span class="bu">max</span>()], </span>
+<span id="cb75-100"><a href="#cb75-100" aria-hidden="true" tabindex="-1"></a>         [Y_test.<span class="bu">min</span>(), Y_test.<span class="bu">max</span>()], </span>
+<span id="cb75-101"><a href="#cb75-101" aria-hidden="true" tabindex="-1"></a>         <span class="st">'r--'</span>, lw<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb75-102"><a href="#cb75-102" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Actual Charges'</span>)</span>
+<span id="cb75-103"><a href="#cb75-103" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Predicted Charges'</span>)</span>
+<span id="cb75-104"><a href="#cb75-104" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Predicted vs Actual Charges -- Random Forest Model'</span>)</span>
+<span id="cb75-105"><a href="#cb75-105" aria-hidden="true" tabindex="-1"></a>plt.savefig(<span class="st">'predicted-vs-actual-changes-random-forest.png'</span>)</span>
+<span id="cb75-106"><a href="#cb75-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-107"><a href="#cb75-107" aria-hidden="true" tabindex="-1"></a>importances <span class="op">=</span> random_forest_model.feature_importances_</span>
+<span id="cb75-108"><a href="#cb75-108" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"random forest importances: </span><span class="sc">{</span>importances<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb75-109"><a href="#cb75-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-110"><a href="#cb75-110" aria-hidden="true" tabindex="-1"></a>plt.close()</span>
+<span id="cb75-111"><a href="#cb75-111" aria-hidden="true" tabindex="-1"></a>xgboost_model.fit(X_train, Y_train)</span>
+<span id="cb75-112"><a href="#cb75-112" aria-hidden="true" tabindex="-1"></a>Y_pred <span class="op">=</span> xgboost_model.predict(X_test)</span>
+<span id="cb75-113"><a href="#cb75-113" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">6</span>))</span>
+<span id="cb75-114"><a href="#cb75-114" aria-hidden="true" tabindex="-1"></a>plt.scatter(Y_test, Y_pred, alpha<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb75-115"><a href="#cb75-115" aria-hidden="true" tabindex="-1"></a>plt.plot([Y_test.<span class="bu">min</span>(), Y_test.<span class="bu">max</span>()], </span>
+<span id="cb75-116"><a href="#cb75-116" aria-hidden="true" tabindex="-1"></a>         [Y_test.<span class="bu">min</span>(), Y_test.<span class="bu">max</span>()], </span>
+<span id="cb75-117"><a href="#cb75-117" aria-hidden="true" tabindex="-1"></a>         <span class="st">'r--'</span>, lw<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb75-118"><a href="#cb75-118" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Actual Charges'</span>)</span>
+<span id="cb75-119"><a href="#cb75-119" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Predicted Charges'</span>)</span>
+<span id="cb75-120"><a href="#cb75-120" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Predicted vs Actual Charges --XGBoost Model'</span>)</span>
+<span id="cb75-121"><a href="#cb75-121" aria-hidden="true" tabindex="-1"></a>plt.savefig(<span class="st">'predicted-vs-actual-changes-xgboost.png'</span>)</span>
+<span id="cb75-122"><a href="#cb75-122" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-123"><a href="#cb75-123" aria-hidden="true" tabindex="-1"></a>importances <span class="op">=</span> xgboost_model.feature_importances_</span>
+<span id="cb75-124"><a href="#cb75-124" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"XGBoost: </span><span class="sc">{</span>importances<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="model-selection" class="level2">
